@@ -1,5 +1,5 @@
 -- VYSX 2025
--- VERSION 1.0.0
+-- VERSION 1.0.1
 -- Requires Handkerlib
 
 local CollectionService = game:GetService("CollectionService")
@@ -29,9 +29,9 @@ function Handkerchief:Init(moduleFiles: { ModuleScript }, componentFiles: { Modu
 			task.wait(0.5)
 		end
 	end
-	Handkerchief:InitModules(self:TestAndLoadModules(moduleFiles, { "Init", "Run" }))
+	Handkerchief:InitModules(Handkerchief:TestAndLoadModules(moduleFiles, { "Init", "Run" }))
 	if componentFiles then
-		self:InitComponents(self:TestAndLoadModules(componentFiles, { "OnCreate", "OnDestroy", "Tag" }))
+		Handkerchief:InitComponents(Handkerchief:TestAndLoadModules(componentFiles, { "OnCreate", "OnDestroy", "Tag" }))
 	end
 	isLoaded = true
 	print("[HC] Server loaded.")
@@ -57,13 +57,13 @@ end
 function Handkerchief:TestAndLoadModules(
 	moduleFiles: { ModuleScript },
 	searchFor: { string }
-): { [ModuleScript]: Types.LoadedModule }
-	local modules: { [ModuleScript]: Types.LoadedModule } = {}
+): { [ModuleScript]: Types.GenericLoadedModule }
+	local modules: { [ModuleScript]: Types.GenericLoadedModule } = {}
 	for moduleIndex: number, module: ModuleScript in moduleFiles do
 		if not module:IsA("ModuleScript") then
 			error("[HC] Invalid file provided.")
 		end
-		local reqModule: Types.LoadedModule = require(module) :: Types.LoadedModule
+		local reqModule: Types.GenericLoadedModule = require(module) :: Types.GenericLoadedModule
 		for searchIndex: number, searchString: string in searchFor do
 			if not reqModule[searchString] then
 				error("[HC] Invalid module format, No " .. searchString .. " found.")
@@ -74,8 +74,8 @@ function Handkerchief:TestAndLoadModules(
 	return modules
 end
 
-function Handkerchief:InitComponents(modules: { [ModuleScript]: Types.LoadedModule })
-	for moduleScript: ModuleScript, loadedModule: Types.LoadedModule in modules do
+function Handkerchief:InitComponents(modules: { [ModuleScript]: Types.GenericLoadedModule })
+	for moduleScript: ModuleScript, loadedModule: Types.GenericLoadedModule in modules do
 		local tag: string = loadedModule["Tag"]
 		for _index: number, instance: Instance in CollectionService:GetTagged(tag) do
 			loadedModule:OnCreate(instance)
@@ -89,11 +89,11 @@ function Handkerchief:InitComponents(modules: { [ModuleScript]: Types.LoadedModu
 	end
 end
 
-function Handkerchief:InitModules(modules: { [ModuleScript]: Types.LoadedModule })
-	for moduleScript: ModuleScript, loadedModule: Types.LoadedModule in modules do
+function Handkerchief:InitModules(modules: { [ModuleScript]: Types.GenericLoadedModule })
+	for moduleScript: ModuleScript, loadedModule: Types.GenericLoadedModule in modules do
 		loadedModule:Init()
 	end
-	for moduleScript: ModuleScript, loadedModule: Types.LoadedModule in modules do
+	for moduleScript: ModuleScript, loadedModule: Types.GenericLoadedModule in modules do
 		loadedModule:Run()
 	end
 end

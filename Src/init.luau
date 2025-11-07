@@ -7,25 +7,22 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Types = require(ReplicatedStorage.Handkerlib.Types)
 local Remotes = require(script.Remotes)
-local internalEvents = script.InternalEvents
 
 local Handkerchief = {}
 
 function Handkerchief:Init(moduleFiles: { ModuleScript }, componentFiles: { ModuleScript }?)
 	local isLoaded: boolean = false
 	if RunService:IsServer() then
-		local status: RemoteEvent = Instance.new("RemoteEvent", script)
-		status.Name = "Status"
-		internalEvents.Status.OnServerEvent:Connect(function(player: Player)
-			internalEvents.Status:FireClient(player, isLoaded)
+		script.Status.OnServerEvent:Connect(function(player: Player)
+			script.Status:FireClient(player, isLoaded)
 		end)
 		Remotes:CreateFolders()
 	elseif RunService:IsClient() then
-		internalEvents.Status.OnClientEvent:Connect(function(returned: boolean)
+		script.Status.OnClientEvent:Connect(function(returned: boolean)
 			isLoaded = returned
 		end)
 		while not isLoaded do
-			internalEvents.Status:FireServer()
+			script.Status:FireServer()
 			task.wait(0.5)
 		end
 	end

@@ -1,5 +1,6 @@
+--!strict
 -- VYSX 2025
--- VERSION 1.0.1
+-- VERSION 1.1.2
 -- Requires Handkerlib
 
 local CollectionService = game:GetService("CollectionService")
@@ -10,25 +11,28 @@ local Remotes = require(script.Remotes)
 
 local Handkerchief = {}
 
+Handkerchief.Libs = {}
+Handkerchief.Handkerlib = require(ReplicatedStorage.Handkerlib)
+Handkerchief.Remotes = require(script.Remotes)
+Handkerchief.Database = require(script.Database)
+Handkerchief.SyncerClientClass = require(script.SyncerClientClass)
+Handkerchief.SyncerServerClass = require(script.SyncerServerClass)
+
 function Handkerchief:Init(moduleFiles: { ModuleScript }, componentFiles: { ModuleScript }?)
 	local isLoaded: boolean = false
 	if RunService:IsServer() then
-		script.Status.OnServerEvent:Connect(function(player: Player)
-			script.Status:FireClient(player, isLoaded)
-		end)
+		script.InternalEvents.LoadStatus.OnServerInvoke = function(player: Player)
+			return isLoaded
+		end
 		Remotes:CreateFolders()
 	elseif RunService:IsClient() then
-		script.Status.OnClientEvent:Connect(function(returned: boolean)
-			isLoaded = returned
-		end)
-		while not isLoaded do
-			script.Status:FireServer()
+		while not script.InternalEvents.LoadStatus:InvokeServer() do
 			task.wait(0.5)
 		end
 	end
-	Handkerchief:InitModules(Handkerchief:TestAndLoadModules(moduleFiles, { "Init", "Run" }))
+	self:InitModules(self:TestAndLoadModules(moduleFiles, { "Init", "Run" }))
 	if componentFiles then
-		Handkerchief:InitComponents(Handkerchief:TestAndLoadModules(componentFiles, { "OnCreate", "OnDestroy", "Tag" }))
+		self:InitComponents(self:TestAndLoadModules(componentFiles, { "OnCreate", "OnDestroy", "Tag" }))
 	end
 	isLoaded = true
 	print("[HC] Server loaded.")

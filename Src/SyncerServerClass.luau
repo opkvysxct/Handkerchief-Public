@@ -19,35 +19,31 @@ export type Class = typeof(setmetatable({} :: Params, SyncerServerClass))
 
 function SyncerServerClass.Create(): Class
 	local self = {}
-	self.ProfileStore = StoreSuperClass.Create(false)
-	self.SyncFunctionStore = StoreSuperClass.Create(false)
+	self.ProfileStore = StoreSuperClass.Create("string", "(newValue: any, params: { any }?) -> nil")
+	self.SyncFunctionStore = StoreSuperClass.Create("string", "(newValue: any, params: { any }?) -> nil")
 	return setmetatable(self, SyncerServerClass)
 end
 
 function SyncerServerClass.RunServer(self: Class, shouldKick: boolean?)
 	internalEvents.SyncerProfile.OnServerInvoke = function(player: Player): Data?
 		if not self.ProfileStore:TryToReturnGivenElement(player.UserId) then
-			warn("[H] Profile for " .. player.Name .. " does not exists.")
-			if shouldKick then
-				player:Kick("[H] No player profile detected on the server.")
-			end
+			warn("[HC] Profile for " .. player.Name .. " does not exists.")
+			if shouldKick then player:Kick("[HC] No player profile detected on the server.") end
 			return nil
 		end
 		return self.ProfileStore:ReturnGivenElement(player.UserId)
 	end
-	internalEvents.SyncerChangeFromClient.OnServerEvent:Connect(
-		function(player: Player, syncKey: string, newValue: any, params: { any })
-			self:IncomingChange(player, syncKey, newValue, params)
-		end
-	)
+	internalEvents.SyncerChangeFromClient.OnServerEvent:Connect(function(player: Player, syncKey: string, newValue: any, params: { any })
+		self:IncomingChange(player, syncKey, newValue, params)
+	end)
 end
 
 function SyncerServerClass.IncomingChange(self: Class, player: Player, syncKey: string, newValue: any, params: { any }?)
-	-- Tries to get the function because client can use cheats to send invalid syncKey
+	-- Tries to get the syncFunction because client can use cheats to send invalid syncKey
 	local syncFunction: SyncFunction? = self.SyncFunctionStore:TryToReturnGivenElement(syncKey)
 	if not syncFunction then
-		warn("[H] No syncFunction with given syncKey.")
-		player:Kick("[H] No syncFunction with given syncKey")
+		warn("[HC] No syncFunction with given syncKey.")
+		player:Kick("[HC] No syncFunction with given syncKey")
 	else
 		syncFunction(player, newValue, params)
 	end

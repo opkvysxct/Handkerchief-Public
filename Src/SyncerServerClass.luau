@@ -1,5 +1,6 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FormattingLib = require(ReplicatedStorage.Handkerlib.Shared.Components.FormattingLib)
 local StoreSuperClass = require(ReplicatedStorage.Handkerlib.SuperClasses.StoreSuperClass)
 local internalEvents = script.Parent.InternalEvents
 
@@ -19,16 +20,16 @@ export type Class = typeof(setmetatable({} :: Params, SyncerServerClass))
 
 function SyncerServerClass.Create(): Class
 	local self = {}
-	self.ProfileStore = StoreSuperClass.Create("string", "(newValue: any, params: { any }?) -> nil")
-	self.SyncFunctionStore = StoreSuperClass.Create("string", "(newValue: any, params: { any }?) -> nil")
+	self.ProfileStore = StoreSuperClass.Create("string", "function")
+	self.SyncFunctionStore = StoreSuperClass.Create("string", "function")
 	return setmetatable(self, SyncerServerClass)
 end
 
 function SyncerServerClass.RunServer(self: Class, shouldKick: boolean?)
 	internalEvents.SyncerProfile.OnServerInvoke = function(player: Player): Data?
 		if not self.ProfileStore:TryToReturnGivenElement(player.UserId) then
-			warn("[HC] Profile for " .. player.Name .. " does not exists.")
-			if shouldKick then player:Kick("[HC] No player profile detected on the server.") end
+			warn(FormattingLib:FormatLogMessage(script, `Profile for {player.Name} does not exists.`))
+			if shouldKick then player:Kick("No player profile detected on the server.") end
 			return nil
 		end
 		return self.ProfileStore:ReturnGivenElement(player.UserId)
@@ -42,8 +43,8 @@ function SyncerServerClass.IncomingChange(self: Class, player: Player, syncKey: 
 	-- Tries to get the syncFunction because client can use cheats to send invalid syncKey
 	local syncFunction: SyncFunction? = self.SyncFunctionStore:TryToReturnGivenElement(syncKey)
 	if not syncFunction then
-		warn("[HC] No syncFunction with given syncKey.")
-		player:Kick("[HC] No syncFunction with given syncKey")
+		warn(FormattingLib:FormatLogMessage(script, "No syncFunction with given syncKey."))
+		player:Kick("No syncFunction with given syncKey")
 	else
 		syncFunction(player, newValue, params)
 	end

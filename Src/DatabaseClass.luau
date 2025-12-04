@@ -133,7 +133,7 @@ end
 
 function DatabaseClass.StopPlayerDataAutoSaving(self: Class)
 	self._AutoSavingEnabled = false
-	self._Cleaner:Destroy()
+	self._Cleaner:CleanUp()
 end
 
 function DatabaseClass.Destroy(self: Class)

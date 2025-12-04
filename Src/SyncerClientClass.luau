@@ -18,7 +18,7 @@ export type Class = typeof(setmetatable({} :: Params, SyncerClientClass))
 
 function SyncerClientClass.Create(): Class
 	local self = {}
-	self.SyncFunctionStore = StoreSuperClass.Create("string", "(newValue: any, params: { any }?) -> nil")
+	self.SyncFunctionStore = StoreSuperClass.Create("string", "function")
 	return setmetatable(self, SyncerClientClass)
 end
 
